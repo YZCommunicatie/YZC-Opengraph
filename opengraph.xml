@@ -14,7 +14,8 @@
 
     <!-- Plugin files -->
     <files>
-        <folder plugin="opengraph">src</folder>
+        <folder plugin="opengraph">services</folder>
+        <folder>src</folder>
         <folder>language</folder>
     </files>
 
