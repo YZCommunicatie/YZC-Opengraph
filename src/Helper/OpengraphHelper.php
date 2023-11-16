@@ -1,6 +1,6 @@
 <?php
 
-namespace Joomill\Plugin\System\Opengraph\Helper\;
+namespace YZCommunicatie\Plugin\System\Opengraph\Helper;
 
 use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Categories\Categories;
@@ -8,227 +8,76 @@ use Joomla\CMS\Document\Document;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\Language\LanguageHelper;
+use Joomla\CMS\Menu\Menu;
+use Joomla\CMS\Menu\MenuItem;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Table\Content;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseDriver;
+use Joomla\Database\DatabaseInterface;
 use Joomla\Registry\Registry;
+use function mb_substr;
+use function phpsubstr;
 
 defined('_JEXEC') or die;
 
-class Helper
+class OpengraphHelper
 {
-    protected $app;
-    protected $db;
-    protected $autoloadLanguage = true;
-    protected $config;
-
-    public function getSitename()
+    public static function getSitename()
     {
         return Factory::getConfig()->get('sitename');
     }
 
-    public function getUrl()
+    public static function getUrl()
     {
         return Uri::getInstance();
     }
 
-    private function getTitle()
-    {
-        $title = '';
-
-        $document = $this->app->getDocument();
-        $title = $document->title;
-
-        if ($this->getScope() === 'com_content.category') {
-            $category = Categories::getInstance('Content')->get($this->app->input->get('id', 0, 'int'));
-            if ($category->title) {
-                $title = $category->title;
-            }
-        }
-
-        if ($this->getScope() === 'com_content.article') {
-            $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
-            $title = $article->title;
-        }
-
-        return $title;
-    }
-
-    private function getDescription()
+    public static function getDescription()
     {
         $description = '';
-        $descriptiontext = '';
+        $descText = '';
+        $metaDescription = '';
 
-        if ($this->getScope() === 'com_content.category') {
-            $category = Categories::getInstance('Content')->get($this->app->input->get('id', 0, 'int'));
+        $menuItemId = Factory::getApplication()->input->get('Itemid', 0, 'int');
+        $menu = Factory::getApplication()->getMenu();
+        $menuItem = $menu->getItem($menuItemId);
+
+        if ($menuItem) {
+            $params = $menuItem->getParams();
+            $descText = $params->get('menu-meta_description');
+
+        }
+
+        if (self::getScope() === 'com_content.category') {
+            $category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
             if ($category->metadesc) {
-                $descriptiontext = $category->metadesc;
-            } else {
-                $descriptiontext = $category->description;
+                $descText = $category->metadesc;
+            } elseif (!isset($descText)) {
+                $descText = $category->description;
             }
+
         }
 
-        if ($this->getScope() === 'com_content.article') {
-            $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
+        if (self::getScope() === 'com_content.article') {
+            $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
             if ($article->metadesc) {
-                $descriptiontext = $article->metadesc;
+                $descText = $article->metadesc;
             } else {
-                $descriptiontext = $article->introtext . ' ' . $article->fulltext;
+                $descText = $article->introtext . ' ' . $article->fulltext;
             }
         }
 
-        if ($descriptiontext) {
-            $description = $this->truncate($descriptiontext, 156, true, '...');
+        if ($descText) {
+            $description = self::truncate($descText, 156, true, '...');
         }
 
         return $description;
     }
 
-    private function getPublishedtime()
+    public static function getScope()
     {
-        $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
-
-        return $article->publish_up;
-    }
-
-    private function getExpirationTime()
-    {
-        $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
-
-        return $article->publish_down;
-    }
-
-    private function getModifiedtime()
-    {
-        $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
-
-        return $article->modified;
-    }
-
-    private function getArticle(int $id): Content
-    {
-        $article = new Content($this->db);
-        $article->load($id);
-
-        return $article;
-    }
-
-    private function getImage()
-    {
-        $image = '';
-
-        if ($this->config->fallback_image)
-        {
-            $image = $this->config->fallback_image;
-        }
-
-        if ($this->getScope() === 'com_content.category') {
-            $category = Categories::getInstance('Content')->get($this->app->input->get('id', 0, 'int'));
-            if ($category->getParams()->get('image')) {
-                $image = $category->getParams()->get('image');
-            }
-        }
-
-        if ($this->getScope() === 'com_content.article') {
-            $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
-            if (json_last_error() === 0) {
-                $articleImages = json_decode($article->images, true);
-            }
-
-            if ($articleImages['image_fulltext']) {
-
-                if (strpos($articleImages['image_fulltext'], '#') !== false) {
-                    $image = substr($articleImages['image_fulltext'], 0, strpos($articleImages['image_fulltext'], '#'));
-                } else {
-                    $image = $articleImages['image_fulltext'];
-                }
-            }
-
-            if ($articleImages['image_intro']) {
-                if (strpos($articleImages['image_intro'], '#') !== false) {
-                    $image = substr($articleImages['image_intro'], 0, strpos($articleImages['image_intro'], '#'));
-                } else {
-                    $image = $articleImages['image_intro'];
-                }
-
-            }
-        }
-
-        $image = preg_replace('~^([\w\-./\\\]+).*$~', '$1', $image);
-
-        if (!$image)
-        {
-            return;
-        }
-
-        $url = empty(Uri::root()) ? '' : rtrim(Uri::base(), '/') . 'Opengraph.php/';
-        $url .= $image;
-
-        return $url;
-    }
-    private function getImageInfo()
-    {
-        if ($this->getImage()) {
-            return getimagesize($this->getImage());
-        } else {
-            return false;
-        }
-    }
-
-    private function getImageAlt()
-    {
-        // Use Article title when no Image ALT
-        $alt = $this->getTitle();
-
-        if ($this->config->fallback_image_alt) {
-            $alt = $this->config->fallback_image_alt;
-        }
-
-        if ($this->getScope() === 'com_content.category') {
-            $category = Categories::getInstance('Content')->get($this->app->input->get('id', 0, 'int'));
-            if ($category->getParams()->get('image_alt')) {
-                $alt = $category->getParams()->get('image_alt');
-            }
-        }
-
-        if ($this->getScope() === 'com_content.article') {
-            $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
-            if (json_last_error() === 0) {
-                $articleImages = json_decode($article->images, true);
-            }
-
-            if ($articleImages['image_fulltext']) {
-                $alt = $articleImages['image_fulltext_alt'];
-            }
-
-            if ($articleImages['image_intro']) {
-                $alt = $articleImages['image_intro_alt'];
-            }
-        }
-
-        return $alt;
-    }
-
-    private function getLocale()
-    {
-        $language = Factory::getLanguage()->getTag();
-        $locale = str_replace('-', '_', $language);
-
-        return $locale;
-    }
-    private function getAuthor()
-    {
-        $article = $this->getArticle($this->app->input->get('id', 0, 'int'));
-        $user = Factory::getUser($article->created_by);
-        $author = $user->name;
-
-        return $author;
-    }
-
-    private function getScope()
-    {
-        $input = $this->app->input;
+        $input = Factory::getApplication()->input;
         $option = $input->get('option', '', 'cmd');
         $view = $input->get('view', '', 'cmd');
         $scope = $option . '.' . $view;
@@ -236,12 +85,20 @@ class Helper
         return $scope;
     }
 
+    public static function getArticle(int $id): Content
+    {
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $article = new Content($db);
+        $article->load($id);
+
+        return $article;
+    }
+
     public static function truncate($str, $length = 0, $strip = false, $ellipsis = '...')
     {
         $result = $str;
 
-        if ($strip)
-        {
+        if ($strip) {
             // {tag}text{/tag}
             $result = preg_replace('#{(.*?)}(.*?){\/(.*?)}#s', '', $result);
 
@@ -260,31 +117,179 @@ class Helper
             $result = trim($result);
         }
 
-        if (extension_loaded('mbstring'))
-        {
-            if (mb_strlen($result) > $length && $length !== 0)
-            {
-                if ($length > mb_strlen($ellipsis))
-                {
+        if (extension_loaded('mbstring')) {
+            if (mb_strlen($result) > $length && $length !== 0) {
+                if ($length > mb_strlen($ellipsis)) {
                     $length = $length - mb_strlen($ellipsis);
                 }
 
-                $result = opengraph . phpmb_substr($result, 0, $length) . $ellipsis;
+                $result = mb_substr($result, 0, $length) . $ellipsis;
             }
-        }
-        else
-        {
-            if (strlen($result) > $length && $length !== 0)
-            {
-                if ($length > strlen($ellipsis))
-                {
+        } else {
+            if (strlen($result) > $length && $length !== 0) {
+                if ($length > strlen($ellipsis)) {
                     $length = $length - strlen($ellipsis);
                 }
 
-                $result = opengraph . phpsubstr($result, 0, $length) . $ellipsis;
+                $result = phpsubstr($result, 0, $length) . $ellipsis;
             }
         }
 
         return $result;
+    }
+
+    public static function getPublishedtime()
+    {
+        $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
+
+        return $article->publish_up;
+    }
+
+    public static function getExpirationTime()
+    {
+        $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
+
+        return $article->publish_down;
+    }
+
+    public static function getModifiedtime()
+    {
+        $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
+
+        return $article->modified;
+    }
+
+    public static function getImageInfo($config)
+    {
+        if (self::getImage($config)) {
+            return getimagesize(self::getImage($config));
+        } else {
+            return false;
+        }
+    }
+
+    public static function getImage($config)
+    {
+        $image = '';
+
+        if ($config->fallback_image) {
+            $image = $config->fallback_image;
+        }
+
+        if (self::getScope() === 'com_content.category') {
+            $category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
+            if ($category->getParams()->get('image')) {
+                $image = $category->getParams()->get('image');
+            }
+        }
+
+        if (self::getScope() === 'com_content.article') {
+            $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
+            if (json_last_error() === 0) {
+                $articleImages = json_decode($article->images, true);
+            }
+
+            if (isset($articleImages['image_fulltext'])) {
+
+                if (isset($articleImages['image_fulltext']) && strpos($articleImages['image_fulltext'], '#') !== false) {
+                    $image = substr($articleImages['image_fulltext'], 0, strpos($articleImages['image_fulltext'], '#'));
+                } else {
+                    $image = $articleImages['image_fulltext'];
+                }
+            }
+
+            if (isset($articleImages['image_intro'])) {
+                if (isset($articleImages['image_intro']) && strpos($articleImages['image_intro'], '#') !== false) {
+                    $image = substr($articleImages['image_intro'], 0, strpos($articleImages['image_intro'], '#'));
+                } else {
+                    $image = $articleImages['image_intro'];
+                }
+
+            }
+        }
+
+        $image = preg_replace('~^([\w\-./\\\]+).*$~', '$1', $image);
+
+        if (!$image) {
+            return;
+        }
+
+        $url = empty(Uri::root()) ? '' : rtrim(Uri::base(), '/') . '/';
+        $url .= $image;
+
+        return $url;
+    }
+
+    public static function getImageAlt($config)
+    {
+        // Use Article title when no Image ALT
+        $alt = self::getTitle();
+
+        if ($config->fallback_image_alt) {
+            $alt = $config->fallback_image_alt;
+        }
+
+        if (self::getScope() === 'com_content.category') {
+            $category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
+            if ($category->getParams()->get('image_alt')) {
+                $alt = $category->getParams()->get('image_alt');
+            }
+        }
+
+        if (self::getScope() === 'com_content.article') {
+            $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
+            if (json_last_error() === 0) {
+                $articleImages = json_decode($article->images, true);
+            }
+
+            if (isset($articleImages['image_fulltext'])) {
+                $alt = $articleImages['image_fulltext_alt'];
+            }
+
+            if (isset($articleImages['image_intro'])) {
+                $alt = $articleImages['image_intro_alt'];
+            }
+        }
+
+        return $alt;
+    }
+
+    public static function getTitle()
+    {
+        $title = '';
+
+        $document = Factory::getApplication()->getDocument();
+        $title = $document->title;
+
+        if (self::getScope() === 'com_content.category') {
+            $category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
+            if ($category->title) {
+                $title = $category->title;
+            }
+        }
+
+        if (self::getScope() === 'com_content.article') {
+            $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
+            $title = $article->title;
+        }
+
+        return $title;
+    }
+
+    public static function getLocale()
+    {
+        $language = Factory::getLanguage()->getTag();
+        $locale = str_replace('-', '_', $language);
+
+        return $locale;
+    }
+
+    public static function getAuthor()
+    {
+        $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
+        $user = Factory::getUser($article->created_by);
+        $author = $user->name;
+
+        return $author;
     }
 }

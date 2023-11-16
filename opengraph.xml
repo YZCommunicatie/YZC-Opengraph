@@ -108,6 +108,6 @@
     </config>
 
     <updateservers>
-        <server type="extension" priority="1" name="Opengraph">https://raw.githubusercontent.com/YZCommunicatie/Opengraph/master/manifest.xml</server>
+        <server type="extension" priority="1" name="Opengraph">https://raw.githubusercontent.com/YZCommunicatie/YZC-Opengraph/master/manifest.xml</server>
     </updateservers>
 </extension>
