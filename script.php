@@ -1,4 +1,11 @@
 <?php
+/*
+ *  package: YZC Open Graph
+ *  copyright: Copyright (c) 2023. Jeroen Moolenschot | YZCommunicatie
+ *  license: GNU General Public License version 2 or later
+ *  link: https://www.yzcommunicatie.nl
+ */
+
 // No direct access to this file
 defined('_JEXEC') or die();
 

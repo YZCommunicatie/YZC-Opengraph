@@ -1,4 +1,10 @@
 <?php
+/*
+ *  package: YZC Open Graph
+ *  copyright: Copyright (c) 2023. Jeroen Moolenschot | YZCommunicatie
+ *  license: GNU General Public License version 2 or later
+ *  link: https://www.yzcommunicatie.nl
+ */
 
 namespace YZCommunicatie\Plugin\System\Opengraph\Extension;
 
