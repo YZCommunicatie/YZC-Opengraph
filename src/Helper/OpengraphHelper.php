@@ -43,7 +43,6 @@ class OpengraphHelper
     {
         $description = '';
         $descText = '';
-        $metaDescription = '';
 
         $menuItemId = Factory::getApplication()->input->get('Itemid', 0, 'int');
         $menu = Factory::getApplication()->getMenu();
@@ -52,7 +51,6 @@ class OpengraphHelper
         if ($menuItem) {
             $params = $menuItem->getParams();
             $descText = $params->get('menu-meta_description');
-
         }
 
         if (self::getScope() === 'com_content.category') {
@@ -69,7 +67,7 @@ class OpengraphHelper
             $article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
             if ($article->metadesc) {
                 $descText = $article->metadesc;
-            } else {
+            } elseif (!isset($descText)) {
                 $descText = $article->introtext . ' ' . $article->fulltext;
             }
         }
