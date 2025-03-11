@@ -8,6 +8,7 @@
 
 namespace YZCommunicatie\Plugin\System\Opengraph\Helper;
 
+use Joomla\CMS\Categories\Categories;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Menu\Menu;
 use Joomla\CMS\Table\Content;
@@ -47,7 +48,7 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Factory::getApplication()->bootComponent('com_content')->getCategory([], "");
+			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
 			if ($category->metadesc)
 			{
 				$descText = $category->metadesc;
@@ -195,7 +196,7 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Factory::getApplication()->bootComponent('com_content')->getCategory([], "");
+			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
 			if ($category->getParams()->get('image'))
 			{
 				$image = $category->getParams()->get('image');
@@ -262,7 +263,7 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Factory::getApplication()->bootComponent('com_content')->getCategory([], "");
+			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
 			if ($category->getParams()->get('image_alt'))
 			{
 				$alt = $category->getParams()->get('image_alt');
@@ -300,7 +301,7 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Factory::getApplication()->bootComponent('com_content')->getCategory([], "");
+			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
 			if ($category->title)
 			{
 				$title = $category->title;

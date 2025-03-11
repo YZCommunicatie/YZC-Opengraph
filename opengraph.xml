@@ -7,7 +7,7 @@
     <license>GPLv3 http://www.gnu.org/licenses/gpl.html</license>
     <authorEmail>jeroen@yzcommunicatie.nl</authorEmail>
     <authorUrl>https://www.yzcommunicatie.nl</authorUrl>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <description>YZC Open Graph - System plugin</description>
     <namespace path="src">YZCommunicatie\Plugin\System\Opengraph</namespace>
     <scriptfile>script.php</scriptfile>
