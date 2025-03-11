@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" version="3.8" group="system" method="upgrade">
+    <name>System - YZC Open Graph</name>
+    <author>Jeroen Moolenschot | YZCommunicatie</author>
+    <creationDate>March 2025</creationDate>
+    <copyright>Copyright (C) 2025 YZCommunicatie. All rights reserved.</copyright>
+    <license>GPLv3 http://www.gnu.org/licenses/gpl.html</license>
+    <authorEmail>jeroen@yzcommunicatie.nl</authorEmail>
+    <authorUrl>https://www.yzcommunicatie.nl</authorUrl>
+    <version>1.2.0</version>
+    <description>YZC Open Graph - System plugin</description>
+    <namespace path="src">YZCommunicatie\Plugin\System\Opengraph</namespace>
+    <scriptfile>script.php</scriptfile>
+
+    <files>
+        <folder plugin="opengraph">services</folder>
+        <folder>src</folder>
+        <folder>language</folder>
+    </files>
+
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                <field
+                        name="notetwitter"
+                        type="note"
+                        class="alert alert-info"
+                        label="Twitter"
+                />
+
+                <field
+                        name="twitter_type"
+                        type="list"
+                        default="summary_large_image"
+                        label="PLG_SYSTEM_OPENGRAPH_TWITTER_TYPE_LABEL"
+                        description="PLG_SYSTEM_OPENGRAPH_TWITTER_TYPE_DESC"
+                >
+                    <option value="summary">PLG_SYSTEM_OPENGRAPH_TWITTER_TYPE_SUMMARY</option>
+                    <option value="summary_large_image">PLG_SYSTEM_OPENGRAPH_TWITTER_TYPE_SUMMARY_LARGE_IMAGE</option>
+                    <option value="app">PLG_SYSTEM_OPENGRAPH_TWITTER_TYPE_CARD_APP</option>
+                    <option value="player">PLG_SYSTEM_OPENGRAPH_TWITTER_TYPE_PLAYER</option>
+                </field>
+
+                <field
+                        name="twitter_site"
+                        type="text"
+                        default=""
+                        label="PLG_SYSTEM_OPENGRAPH_TWITTER_SITE"
+                        description="PLG_SYSTEM_OPENGRAPH_TWITTER_SITE_DESC"
+                />
+
+                <field
+                        name="twitter_author"
+                        type="text"
+                        default=""
+                        label="PLG_SYSTEM_OPENGRAPH_TWITTER_AUTHOR"
+                        description="PLG_SYSTEM_OPENGRAPH_TWITTER_AUTHOR_DESC"
+                />
+
+                <field
+                        name="notefacebook"
+                        type="note"
+                        class="alert alert-info"
+                        label="Facebook"
+                />
+
+                <field
+                        name="fb_page_id"
+                        type="text"
+                        default=""
+                        label="PLG_SYSTEM_OPENGRAPH_FB_PAGE_ID"
+                        description="PLG_SYSTEM_OPENGRAPH_FB_PAGE_ID_DESC"
+                />
+
+                <field
+                        name="fb_app_id"
+                        type="text"
+                        default=""
+                        label="PLG_SYSTEM_OPENGRAPH_FB_APP_ID"
+                        description="PLG_SYSTEM_OPENGRAPH_FB_APP_ID_DESC"
+                />
+
+                <field
+                        name="notefallback"
+                        type="note"
+                        class="alert alert-info"
+                        label="Fallback"
+                />
+
+                <field
+                        name="fallback_image"
+                        type="media"
+                        default=""
+                        label="PLG_SYSTEM_OPENGRAPH_FALLBACK_IMAGE"
+                        description="PLG_SYSTEM_OPENGRAPH_FALLBACK_IMAGE_DESC"
+                />
+
+                <field
+                        name="fallback_image_alt"
+                        type="text"
+                        default=""
+                        label="PLG_SYSTEM_OPENGRAPH_FALLBACK_IMAGE_ALT"
+                        description="PLG_SYSTEM_OPENGRAPH_FALLBACK_IMAGE_ALT_DESC"
+                />
+            </fieldset>
+        </fields>
+    </config>
+
+    <updateservers>
+        <server type="extension" priority="1" name="YZC Opengraph">
+            https://raw.githubusercontent.com/YZCommunicatie/YZC-Opengraph/master/manifest.xml
+        </server>
+    </updateservers>
+</extension>
