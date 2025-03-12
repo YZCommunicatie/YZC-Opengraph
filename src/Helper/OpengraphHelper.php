@@ -8,16 +8,17 @@
 
 namespace YZCommunicatie\Plugin\System\Opengraph\Helper;
 
-use Joomla\CMS\Categories\Categories;
+\defined('_JEXEC') or die;
+
 use Joomla\CMS\Factory;
 use Joomla\CMS\Menu\Menu;
 use Joomla\CMS\Table\Content;
+use Joomla\CMS\Table\Category;
 use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\User\UserFactoryInterface;
 use Joomla\Database\DatabaseInterface;
 use function mb_substr;
 use function phpsubstr;
-
-defined('_JEXEC') or die;
 
 class OpengraphHelper
 {
@@ -48,7 +49,7 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
+			$category = self::getCategory(Factory::getApplication()->input->get('id', 0, 'int'));
 			if ($category->metadesc)
 			{
 				$descText = $category->metadesc;
@@ -57,7 +58,6 @@ class OpengraphHelper
 			{
 				$descText = $category->description;
 			}
-
 		}
 
 		if (self::getScope() === 'com_content.article')
@@ -95,6 +95,15 @@ class OpengraphHelper
 	{
 		$db      = Factory::getContainer()->get(DatabaseInterface::class);
 		$article = new Content($db);
+		$article->load($id);
+
+		return $article;
+	}
+
+	public static function getCategory(int $id): Category
+	{
+		$db      = Factory::getContainer()->get(DatabaseInterface::class);
+		$article = new Category($db);
 		$article->load($id);
 
 		return $article;
@@ -196,10 +205,17 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
-			if ($category->getParams()->get('image'))
+			$category = self::getCategory(Factory::getApplication()->input->get('id', 0, 'int'));
+			if ($category->params)
 			{
-				$image = $category->getParams()->get('image');
+				$params = json_decode($category->params);
+				if ($params && !empty($params->image)) {
+					if (strpos($params->image, '#') !== false) {
+						$image = substr($params->image, 0, strpos($params->image, '#'));
+					} else {
+						$image = $params->image;
+					}
+				}
 			}
 		}
 
@@ -234,7 +250,6 @@ class OpengraphHelper
 				{
 					$image = $articleImages['image_intro'];
 				}
-
 			}
 		}
 
@@ -263,10 +278,13 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
-			if ($category->getParams()->get('image_alt'))
+			$category = self::getCategory(Factory::getApplication()->input->get('id', 0, 'int'));
+			if ($category->params)
 			{
-				$alt = $category->getParams()->get('image_alt');
+				$params = json_decode($category->params);
+				if ($params && !empty($params->image_alt)) {
+					$alt = $params->image_alt;
+				}
 			}
 		}
 
@@ -301,7 +319,7 @@ class OpengraphHelper
 
 		if (self::getScope() === 'com_content.category')
 		{
-			$category = Categories::getInstance('Content')->get(Factory::getApplication()->input->get('id', 0, 'int'));
+			$category = self::getCategory(Factory::getApplication()->input->get('id', 0, 'int'));
 			if ($category->title)
 			{
 				$title = $category->title;
@@ -328,7 +346,7 @@ class OpengraphHelper
 	public static function getAuthor()
 	{
 		$article = self::getArticle(Factory::getApplication()->input->get('id', 0, 'int'));
-		$user    = Factory::getContainer()->get(\Joomla\CMS\User\UserFactoryInterface::class)->loadUserById($article->created_by);
+		$user    = Factory::getContainer()->get(UserFactoryInterface::class)->loadUserById($article->created_by);
 		$author  = $user->name;
 
 		return $author;

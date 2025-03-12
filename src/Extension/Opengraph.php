@@ -8,11 +8,11 @@
 
 namespace YZCommunicatie\Plugin\System\Opengraph\Extension;
 
+\defined('_JEXEC') or die;
+
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Event\DispatcherInterface;
 use YZCommunicatie\Plugin\System\Opengraph\Helper\OpengraphHelper;
-
-defined('_JEXEC') or die;
 
 final class Opengraph extends CMSPlugin
 {
